@@ -18,7 +18,8 @@ import (
 
 // DebitWallet debits a wallet, potentially creating a hold if pending is true.
 func (s *sWallet) DebitWallet(ctx context.Context, walletID string, amount walletsclient.Monetary, pending *bool, metadata map[string]string, description *string, destination *walletsclient.Subject, balances []string, timestamp *time.Time) (*walletsclient.Hold, error) {
-	client, err := WalletClient().GetClient(ctx)
+	// Get the client from the service struct
+	apiClient, err := s.client.GetClient(ctx)
 	if err != nil {
 		return nil, gerror.Wrap(err, "获取 Wallet API 客户端失败")
 	}
@@ -58,7 +59,7 @@ func (s *sWallet) DebitWallet(ctx context.Context, walletID string, amount walle
 		g.Log().Debugf(ctx, "DebitWallet Request Payload (WalletID: %s): %s", walletID, string(reqJSON))
 	}
 
-	resp, httpResp, err := client.WalletsV1API.DebitWallet(ctx, walletID).DebitWalletRequest(*req).Execute()
+	resp, httpResp, err := apiClient.WalletsV1API.DebitWallet(ctx, walletID).DebitWalletRequest(*req).Execute() // Use apiClient
 
 	g.Log().Debug(ctx, "DebitWallet API 调用完成 (ID: %s)", resp)
 

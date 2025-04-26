@@ -12,7 +12,8 @@ import (
 )
 
 func (s *sWallet) ConfirmHold(ctx context.Context, holdID string, amount *int32, final *bool) error {
-	client, err := WalletClient().GetClient(ctx)
+	// Get the client from the service struct
+	apiClient, err := s.client.GetClient(ctx)
 	if err != nil {
 		return gerror.Wrap(err, "获取 Wallet API 客户端失败")
 	}
@@ -25,7 +26,7 @@ func (s *sWallet) ConfirmHold(ctx context.Context, holdID string, amount *int32,
 		req.SetFinal(*final)
 	}
 
-	httpResp, err := client.WalletsV1API.ConfirmHold(ctx, holdID).ConfirmHoldRequest(*req).Execute()
+	httpResp, err := apiClient.WalletsV1API.ConfirmHold(ctx, holdID).ConfirmHoldRequest(*req).Execute() // Use apiClient
 
 	if err != nil {
 		status := "N/A"

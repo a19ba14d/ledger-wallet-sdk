@@ -11,12 +11,13 @@ import (
 )
 
 func (s *sWallet) ListBalances(ctx context.Context, walletID string) (*walletsclient.ListBalancesResponseCursor, error) {
-	client, err := WalletClient().GetClient(ctx)
+	// Get the client from the service struct
+	apiClient, err := s.client.GetClient(ctx)
 	if err != nil {
 		return nil, gerror.Wrap(err, "获取 Wallet API 客户端失败")
 	}
 
-	resp, httpResp, err := client.WalletsV1API.ListBalances(ctx, walletID).Execute()
+	resp, httpResp, err := apiClient.WalletsV1API.ListBalances(ctx, walletID).Execute() // Use apiClient
 
 	if err != nil {
 		status := "N/A"

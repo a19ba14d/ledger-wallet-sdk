@@ -1,18 +1,14 @@
-package service
+package client // Changed package name
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"sync"
 	"time"
 
-	walletsclient "github.com/a19ba14d/ledger-wallet-sdk/internal/generated/v1" // 确认路径
-
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/frame/g"
-	// "golang.org/x/oauth2" // Commented out as OAuth2 is bypassed
-	// "golang.org/x/oauth2/clientcredentials" // Commented out as OAuth2 is bypassed
+	// Updated import path for sdk config
+	sdkconfig "github.com/a19ba14d/ledger-wallet-sdk/pkg/sdkconfig"
+	walletsclient "github.com/a19ba14d/ledger-wallet-sdk/internal/generated/v1" // Keep generated client
+	// Removed unused imports: fmt, sync, gerror, g
 )
 
 // IWalletClient defines the interface for the wallet API client service.
@@ -23,124 +19,50 @@ type IWalletClient interface {
 }
 
 // sWalletClient implements the IWalletClient interface.
+// It now holds only the configured API client.
 type sWalletClient struct {
-	client       *walletsclient.APIClient
-	baseURL      string
-	clientID     string
-	clientSecret string
-	tokenURL     string
-	httpClient   *http.Client // Store the OAuth2 authenticated client
-	mutex        sync.RWMutex
+	client *walletsclient.APIClient
 }
 
-var (
-	insWalletClient  IWalletClient
-	walletClientOnce sync.Once
-)
-
-// WalletClient returns an instance of the wallet client service.
-func WalletClient() IWalletClient {
-	walletClientOnce.Do(func() {
-		insWalletClient = &sWalletClient{}
-		// Lazy initialization in GetClient
-	})
-	return insWalletClient
-}
-
-// GetClient returns or initializes the wallet API client.
-func (s *sWalletClient) GetClient(ctx context.Context) (*walletsclient.APIClient, error) {
-	s.mutex.RLock()
-	// Check if client and http client are already initialized
-	if s.client != nil && s.httpClient != nil {
-		// Note: The oauth2 client should handle token refreshing automatically.
-		// If more complex checks are needed (e.g., force refresh), add logic here.
-		defer s.mutex.RUnlock()
-		return s.client, nil
-	}
-	s.mutex.RUnlock()
-
-	// Need to create or refresh the client
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	// Double check in case another goroutine initialized it while waiting for the lock
-	if s.client != nil && s.httpClient != nil {
-		return s.client, nil
+// NewWalletClient creates a new wallet client instance based on the provided SDK configuration.
+func NewWalletClient(cfg *sdkconfig.Config) (IWalletClient, error) { // Updated parameter type
+	// Use provided http client or create a default one
+	httpClient := cfg.HTTPClient
+	if httpClient == nil {
+		// Note: Using the internal defaultTimeout from Config is tricky here
+		// as it's not exported. We might need to rethink how timeout is handled
+		// or just use a standard default here. Using 15 seconds for now.
+		httpClient = &http.Client{Timeout: 15 * time.Second}
+		// Consider logging a warning if using default client? Requires logger access.
 	}
 
-	// Load configuration from manifest/config/config.yaml
-	// Ensure the keys match exactly what's in the config file.
-	cfgMapVar, err := g.Cfg().Get(ctx, "walletsApi")
-	if err != nil {
-		g.Log().Errorf(ctx, "Failed to get walletsApi configuration: %v", err)
-		return nil, gerror.Wrap(err, "failed to get walletsApi configuration")
-	}
-	if cfgMapVar.IsNil() || !cfgMapVar.IsMap() {
-		err := fmt.Errorf("walletsApi configuration is missing or not a map in manifest/config/config.yaml")
-		g.Log().Error(ctx, err)
-		return nil, err
-	}
-	cfgMap := cfgMapVar.Map()
-
-	baseURL, okBaseURL := cfgMap["baseUrl"].(string)
-	clientID, okClientID := cfgMap["oauthClientId"].(string)
-	clientSecret, okClientSecret := cfgMap["oauthClientSecret"].(string)
-	tokenURL, okTokenURL := cfgMap["oauthTokenUrl"].(string)
-
-	if !okBaseURL || baseURL == "" || !okClientID || clientID == "" || !okClientSecret || clientSecret == "" || !okTokenURL || tokenURL == "" {
-		err := fmt.Errorf("wallets API configuration missing or invalid in manifest/config/config.yaml (baseUrl, oauthClientId, oauthClientSecret, oauthTokenUrl must be non-empty strings)")
-		g.Log().Error(ctx, err)
-		return nil, err
-	}
-
-	s.baseURL = baseURL
-	s.clientID = clientID
-	s.clientSecret = clientSecret
-	s.tokenURL = tokenURL
-
-	// --- BEGIN COMMENTED OUT OAuth2 CODE ---
-	// // Configure OAuth2 client credentials flow
-	// conf := &clientcredentials.Config{
-	// 	ClientID:     s.clientID,
-	// 	ClientSecret: s.clientSecret,
-	// 	TokenURL:     s.tokenURL,
-	// 	Scopes:       []string{}, // Add required scopes if any, e.g., ["wallets:read", "wallets:write"] based on openapi.yaml
-	// 	AuthStyle: oauth2.AuthStyleInParams, // Adjust if needed, default is usually AuthStyleInHeader
-	// }
-	//
-	// // Create an HTTP client that automatically handles token refresh
-	// // Use a context with timeout for the initial token request and potentially background refresh
-	// // It's generally better to use the passed-in context 'ctx' for the client creation
-	// // but ensure it doesn't cancel prematurely for background refreshes if needed.
-	// // Using context.Background() for the token source might be safer for long-lived clients.
-	// oauthCtx := context.WithValue(context.Background(), oauth2.HTTPClient, &http.Client{Timeout: 15 * time.Second}) // Use Background for token source
-	// httpClient := conf.Client(oauthCtx)
-	// s.httpClient = httpClient
-	// --- END COMMENTED OUT OAuth2 CODE ---
-
-	// Use a standard HTTP client since authentication is bypassed
-	g.Log().Warning(ctx, "Wallet API client is configured WITHOUT OAuth2 authentication.")
-	s.httpClient = &http.Client{Timeout: 15 * time.Second} // Use a default client with timeout
-
-	// Configure the walletsclient
+	// Configure the walletsclient using the provided BaseURL and httpClient
 	walletsCfg := walletsclient.NewConfiguration()
-	walletsCfg.HTTPClient = s.httpClient
-	// Ensure the base URL ends with a slash if the paths in openapi.yaml don't start with one.
-	// Based on the provided openapi.yaml, paths start with '/', so no trailing slash needed for baseURL.
+	walletsCfg.HTTPClient = httpClient
 	walletsCfg.Servers = walletsclient.ServerConfigurations{
 		walletsclient.ServerConfiguration{
-			URL:         s.baseURL, // Use the base URL from config
+			URL:         cfg.BaseURL, // Use BaseURL from the passed Config
 			Description: "Default Server",
 		},
 	}
-	// Optional debug flag from config
-	// walletsCfg.Debug = g.Cfg().MustGet(ctx, "walletsApi.debug", false).Bool()
+	// Optional: Set Debug flag based on some config if needed later
+	// walletsCfg.Debug = cfg.Debug // Assuming Debug field exists in ledgerwalletsdk.Config
 
-	s.client = walletsclient.NewAPIClient(walletsCfg)
+	apiClient := walletsclient.NewAPIClient(walletsCfg)
 
-	g.Log().Infof(ctx, "Wallet API client initialized for base URL: %s", s.baseURL)
+	// Consider logging initialization success? Requires logger access.
+	// cfg.logger.Infof(context.Background(), "Wallet API client initialized for base URL: %s", cfg.BaseURL)
+
+	return &sWalletClient{client: apiClient}, nil
+}
+
+// GetClient returns the underlying generated API client.
+// The client is now initialized eagerly in NewWalletClient.
+func (s *sWalletClient) GetClient(ctx context.Context) (*walletsclient.APIClient, error) {
+	// Context is passed but not used here currently. Keep it for interface consistency.
 	return s.client, nil
 }
 
-// Note: Close method is usually not needed for http clients managed by oauth2 library.
-// The underlying connections are typically managed by the http transport.
+// Note: Singleton logic (insWalletClient, walletClientOnce, WalletClient func) removed.
+// Note: Config reading from g.Cfg() removed.
+// Note: OAuth2 related code was already commented out and logic removed.

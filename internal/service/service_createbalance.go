@@ -11,13 +11,14 @@ import (
 )
 
 func (s *sWallet) CreateBalance(ctx context.Context, walletID string, balance walletsclient.Balance) (*walletsclient.Balance, error) {
-	client, err := WalletClient().GetClient(ctx)
+	// Get the client from the service struct
+	apiClient, err := s.client.GetClient(ctx)
 	if err != nil {
 		return nil, gerror.Wrap(err, "获取 Wallet API 客户端失败")
 	}
 
 	req := balance // Use the provided balance object directly as the request body
-	resp, httpResp, err := client.WalletsV1API.CreateBalance(ctx, walletID).Body(req).Execute()
+	resp, httpResp, err := apiClient.WalletsV1API.CreateBalance(ctx, walletID).Body(req).Execute() // Use apiClient
 
 	if err != nil {
 		status := "N/A"

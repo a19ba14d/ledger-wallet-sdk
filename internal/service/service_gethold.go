@@ -11,12 +11,13 @@ import (
 )
 
 func (s *sWallet) GetHold(ctx context.Context, holdID string) (*walletsclient.ExpandedDebitHold, error) {
-	client, err := WalletClient().GetClient(ctx)
+	// Get the client from the service struct
+	apiClient, err := s.client.GetClient(ctx)
 	if err != nil {
 		return nil, gerror.Wrap(err, "获取 Wallet API 客户端失败")
 	}
 
-	resp, httpResp, err := client.WalletsV1API.GetHold(ctx, holdID).Execute()
+	resp, httpResp, err := apiClient.WalletsV1API.GetHold(ctx, holdID).Execute() // Use apiClient
 
 	if err != nil {
 		status := "N/A"

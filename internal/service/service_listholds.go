@@ -3,21 +3,23 @@ package service
 import (
 	"context"
 
-	ledgerwalletsdk "github.com/a19ba14d/ledger-wallet-sdk"
+	// Removed import of root package ledgerwalletsdk
 	walletsclient "github.com/a19ba14d/ledger-wallet-sdk/internal/generated/v1" // 确认路径
+	sdkTypes "github.com/a19ba14d/ledger-wallet-sdk/pkg/types"                   // Import shared types package
 
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	// "github.com/shopspring/decimal" // Removed unused import
 )
 
-func (s *sWallet) ListHolds(ctx context.Context, params ledgerwalletsdk.ListHoldsParams) (*walletsclient.GetHoldsResponseCursor, error) {
-	client, err := WalletClient().GetClient(ctx)
+func (s *sWallet) ListHolds(ctx context.Context, params sdkTypes.ListHoldsParams) (*walletsclient.GetHoldsResponseCursor, error) { // Use sdkTypes
+	// Get the client from the service struct
+	apiClient, err := s.client.GetClient(ctx)
 	if err != nil {
 		return nil, gerror.Wrap(err, "获取 Wallet API 客户端失败")
 	}
 
-	apiReq := client.WalletsV1API.GetHolds(ctx)
+	apiReq := apiClient.WalletsV1API.GetHolds(ctx) // Use apiClient
 	if params.WalletID != nil {
 		apiReq = apiReq.WalletID(*params.WalletID)
 	}

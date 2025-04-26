@@ -13,7 +13,8 @@ import (
 )
 
 func (s *sWallet) CreateWallet(ctx context.Context, name string, metadata map[string]string) (*walletsclient.Wallet, error) {
-	client, err := WalletClient().GetClient(ctx)
+	// Get the client from the service struct
+	apiClient, err := s.client.GetClient(ctx)
 	if err != nil {
 		return nil, gerror.Wrap(err, "获取 Wallet API 客户端失败")
 	}
@@ -24,7 +25,7 @@ func (s *sWallet) CreateWallet(ctx context.Context, name string, metadata map[st
 	}
 
 	req := walletsclient.NewCreateWalletRequest(metadata, name)
-	resp, httpResp, err := client.WalletsV1API.CreateWallet(ctx).CreateWalletRequest(*req).Execute()
+	resp, httpResp, err := apiClient.WalletsV1API.CreateWallet(ctx).CreateWalletRequest(*req).Execute() // Use apiClient
 
 	g.Log().Debug(ctx, "CreateWallet Request Payload: %+v", resp)
 

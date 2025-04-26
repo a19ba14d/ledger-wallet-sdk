@@ -12,7 +12,8 @@ import (
 )
 
 func (s *sWallet) UpdateWallet(ctx context.Context, walletID string, metadata map[string]string) error {
-	client, err := WalletClient().GetClient(ctx)
+	// Get the client from the service struct
+	apiClient, err := s.client.GetClient(ctx)
 	if err != nil {
 		return gerror.Wrap(err, "获取 Wallet API 客户端失败")
 	}
@@ -23,7 +24,7 @@ func (s *sWallet) UpdateWallet(ctx context.Context, walletID string, metadata ma
 	}
 
 	req := walletsclient.NewUpdateWalletRequest(metadata)
-	httpResp, err := client.WalletsV1API.UpdateWallet(ctx, walletID).UpdateWalletRequest(*req).Execute()
+	httpResp, err := apiClient.WalletsV1API.UpdateWallet(ctx, walletID).UpdateWalletRequest(*req).Execute() // Use apiClient
 
 	if err != nil {
 		status := "N/A"
