@@ -1,0 +1,38 @@
+package service
+
+import (
+	"context"
+
+	walletsclient "github.com/a19ba14d/ledger-wallet-sdk/internal/generated/v1" // 确认路径
+
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
+	// "github.com/shopspring/decimal" // Removed unused import
+)
+
+func (s *sWallet) GetBalance(ctx context.Context, walletID, balanceName string) (*walletsclient.BalanceWithAssets, error) {
+	client, err := WalletClient().GetClient(ctx)
+	if err != nil {
+		return nil, gerror.Wrap(err, "获取 Wallet API 客户端失败")
+	}
+
+	resp, httpResp, err := client.WalletsV1API.GetBalance(ctx, walletID, balanceName).Execute()
+
+	if err != nil {
+		status := "N/A"
+		if httpResp != nil {
+			status = httpResp.Status
+		}
+		g.Log().Errorf(ctx, "GetBalance API 调用失败 (WalletID: %s, Balance: %s): %v, HTTP Status: %s", walletID, balanceName, err, status)
+		return nil, gerror.Wrapf(err, "获取余额详情 API 调用失败 (WalletID: %s, Balance: %s, HTTP: %s)", walletID, balanceName, status)
+	}
+	if resp == nil {
+		status := "N/A"
+		if httpResp != nil {
+			status = httpResp.Status
+		}
+		return nil, gerror.Newf("获取余额详情 API 返回空响应 (WalletID: %s, Balance: %s, HTTP: %s)", walletID, balanceName, status)
+	}
+
+	return &resp.Data, nil
+}

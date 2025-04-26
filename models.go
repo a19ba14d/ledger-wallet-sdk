@@ -1,6 +1,8 @@
 package ledgerwalletsdk
 
-// ListWalletsParams 查询钱包列表参数
+// Timestamp alias moved to types.go
+
+// ListWalletsParams holds parameters for listing wallets.
 type ListWalletsParams struct {
 	Name     *string
 	Metadata map[string]string
@@ -9,7 +11,7 @@ type ListWalletsParams struct {
 	Expand   []string
 }
 
-// ListHoldsParams 查询冻结列表参数
+// ListHoldsParams holds parameters for listing holds.
 type ListHoldsParams struct {
 	WalletID *string
 	Metadata map[string]string
@@ -17,11 +19,9 @@ type ListHoldsParams struct {
 	Cursor   *string
 }
 
-// GetTransactionsParams 查询交易列表参数
+// GetTransactionsParams holds parameters for listing transactions.
 type GetTransactionsParams struct {
 	PageSize *int32
 	WalletID *string
 	Cursor   *string
 }
-
-// Timestamp alias moved to types.go
