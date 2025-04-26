@@ -47,6 +47,7 @@ func NewWallet() *sWallet {
 	return &sWallet{}
 }
 
+
 // Wallet returns the registered wallet service instance.
 func Wallet() IWallet {
 	// No need for panic check if using init() registration
