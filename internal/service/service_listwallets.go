@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	ledgerwalletsdk "github.com/a19ba14d/ledger-wallet-sdk"
 	walletsclient "github.com/a19ba14d/ledger-wallet-sdk/internal/generated/v1" // 确认路径
 
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -10,7 +11,7 @@ import (
 	// "github.com/shopspring/decimal" // Removed unused import
 )
 
-func (s *sWallet) ListWallets(ctx context.Context, params ListWalletsParams) (*walletsclient.ListWalletsResponseCursor, error) {
+func (s *sWallet) ListWallets(ctx context.Context, params ledgerwalletsdk.ListWalletsParams) (*walletsclient.ListWalletsResponseCursor, error) {
 	client, err := WalletClient().GetClient(ctx)
 	if err != nil {
 		return nil, gerror.Wrap(err, "获取 Wallet API 客户端失败")
