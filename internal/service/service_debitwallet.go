@@ -10,6 +10,7 @@ import (
 	"time"
 
 	walletsclient "github.com/a19ba14d/ledger-wallet-sdk/internal/generated/v1" // 确认路径
+	sdkTypes "github.com/a19ba14d/ledger-wallet-sdk/pkg/types"
 
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
@@ -17,7 +18,7 @@ import (
 )
 
 // DebitWallet debits a wallet, potentially creating a hold if pending is true.
-func (s *sWallet) DebitWallet(ctx context.Context, walletID string, amount walletsclient.Monetary, pending *bool, metadata map[string]string, description *string, destination *walletsclient.Subject, balances []string, timestamp *time.Time) (*walletsclient.Hold, error) {
+func (s *sWallet) DebitWallet(ctx context.Context, walletID string, amount sdkTypes.Monetary, pending *bool, metadata map[string]string, description *string, destination *walletsclient.Subject, balances []string, timestamp *time.Time) (*walletsclient.Hold, error) {
 	// Get the client from the service struct
 	apiClient, err := s.client.GetClient(ctx)
 	if err != nil {
@@ -33,8 +34,13 @@ func (s *sWallet) DebitWallet(ctx context.Context, walletID string, amount walle
 	if metadata == nil {
 		metadata = make(map[string]string) // Initialize if nil
 	}
+	// 将 sdkTypes.Monetary 转换为 walletsclient.Monetary
+	walletAmount := walletsclient.Monetary{
+		Asset:  amount.Asset,
+		Amount: amount.Amount,
+	}
 
-	req := walletsclient.NewDebitWalletRequest(amount, metadata)
+	req := walletsclient.NewDebitWalletRequest(walletAmount, metadata)
 	// if pending != nil {
 	// 	req.SetPending(*pending)
 	// }

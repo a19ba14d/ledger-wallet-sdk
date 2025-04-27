@@ -6,13 +6,14 @@ import (
 	"time"
 
 	walletsclient "github.com/a19ba14d/ledger-wallet-sdk/internal/generated/v1" // 确认路径
+	sdkTypes "github.com/a19ba14d/ledger-wallet-sdk/pkg/types"
 
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	// "github.com/shopspring/decimal" // Removed unused import
 )
 
-func (s *sWallet) CreditWallet(ctx context.Context, walletID string, amount walletsclient.Monetary, sources []walletsclient.Subject, reference *string, metadata map[string]string, balance *string, timestamp *time.Time) error {
+func (s *sWallet) CreditWallet(ctx context.Context, walletID string, amount sdkTypes.Monetary, sources []walletsclient.Subject, reference *string, metadata map[string]string, balance *string, timestamp *time.Time) error {
 	// Get the client from the service struct
 	apiClient, err := s.client.GetClient(ctx)
 	if err != nil {
@@ -24,7 +25,13 @@ func (s *sWallet) CreditWallet(ctx context.Context, walletID string, amount wall
 		return gerror.Newf("无效金额：金额必须是正整数 (传入值: %d)", amount.Amount)
 	}
 
-	req := walletsclient.NewCreditWalletRequest(amount)
+	// 将 sdkTypes.Monetary 转换为 walletsclient.Monetary
+	walletAmount := walletsclient.Monetary{
+		Asset:  amount.Asset,
+		Amount: amount.Amount,
+	}
+	
+	req := walletsclient.NewCreditWalletRequest(walletAmount)
 	if sources != nil { // Ensure sources is not nil before setting
 		req.SetSources(sources)
 	}

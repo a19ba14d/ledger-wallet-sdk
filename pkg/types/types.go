@@ -29,8 +29,8 @@ type Subject struct {
 
 // Balance 代表特定资产的余额信息。
 type Balance struct {
-	Name   string    `json:"name"` // 余额名称 (通常是资产名称)
-	Amount Monetary  `json:"amount"`
+	Name   string   `json:"name"` // 余额名称 (通常是资产名称)
+	Amount Monetary `json:"amount"`
 	// 可以根据需要添加其他余额相关字段，如 Expiry, Priority 等
 }
 
@@ -43,13 +43,13 @@ type Hold struct {
 	ID          string            `json:"id"`
 	WalletID    string            `json:"walletID"`
 	Description string            `json:"description"`
-	Amount      Monetary          `json:"amount"` // 冻结的原始金额
+	Amount      Monetary          `json:"amount"`    // 冻结的原始金额
 	Remaining   Monetary          `json:"remaining"` // 冻结的剩余金额 (确认后减少)
 	Metadata    map[string]string `json:"metadata"`
 	Destination *Subject          `json:"destination,omitempty"` // 可选的目的地
 	CreatedAt   time.Time         `json:"createdAt"`
 	ExpiredAt   *time.Time        `json:"expiredAt,omitempty"` // 可选的过期时间
-	IsVoid      bool              `json:"isVoid"` // 是否已作废
+	IsVoid      bool              `json:"isVoid"`              // 是否已作废
 }
 
 // ExpandedDebitHold 提供了更详细的冻结信息，通常包含关联的交易。
@@ -86,11 +86,11 @@ type ServerInfo struct {
 
 // Cursor 用于分页查询的响应。
 type Cursor[T any] struct {
-	PageSize    int    `json:"pageSize"`
-	HasMore     bool   `json:"hasMore"`
-	Previous    *string `json:"previous,omitempty"`
-	Next        *string `json:"next,omitempty"`
-	Data        []T    `json:"data"`
+	PageSize int     `json:"pageSize"`
+	HasMore  bool    `json:"hasMore"`
+	Previous *string `json:"previous,omitempty"`
+	Next     *string `json:"next,omitempty"`
+	Data     []T     `json:"data"`
 }
 
 // --- 辅助类型 ---

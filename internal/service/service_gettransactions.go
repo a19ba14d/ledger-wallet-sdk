@@ -5,7 +5,9 @@ import (
 
 	// Removed import of root package ledgerwalletsdk
 	walletsclient "github.com/a19ba14d/ledger-wallet-sdk/internal/generated/v1" // 确认路径
-	sdkTypes "github.com/a19ba14d/ledger-wallet-sdk/pkg/types"                   // Import shared types package
+	sdkTypes "github.com/a19ba14d/ledger-wallet-sdk/pkg/types"
+
+	// sdkTypes "github.com/a19ba14d/ledger-wallet-sdk/pkg/types"                   // Import shared types package
 
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"

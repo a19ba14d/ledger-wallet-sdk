@@ -7,7 +7,7 @@ import (
 	// Removed import of root package ledgerwalletsdk
 	internalClient "github.com/a19ba14d/ledger-wallet-sdk/internal/client"      // Import internal client package
 	walletsclient "github.com/a19ba14d/ledger-wallet-sdk/internal/generated/v1" // Keep generated client
-	sdkTypes "github.com/a19ba14d/ledger-wallet-sdk/pkg/types"                   // Import shared types package
+	sdkTypes "github.com/a19ba14d/ledger-wallet-sdk/pkg/types"                  // Import shared types package
 	// "github.com/shopspring/decimal" // Removed unused import
 )
 
@@ -17,8 +17,8 @@ type IWallet interface {
 	GetWallet(ctx context.Context, walletID string) (*walletsclient.WalletWithBalances, error)
 	ListWallets(ctx context.Context, params sdkTypes.ListWalletsParams) (*walletsclient.ListWalletsResponseCursor, error) // Use sdkTypes
 	UpdateWallet(ctx context.Context, walletID string, metadata map[string]string) error
-	CreditWallet(ctx context.Context, walletID string, amount walletsclient.Monetary, sources []walletsclient.Subject, reference *string, metadata map[string]string, balance *string, timestamp *time.Time) error
-	DebitWallet(ctx context.Context, walletID string, amount walletsclient.Monetary, pending *bool, metadata map[string]string, description *string, destination *walletsclient.Subject, balances []string, timestamp *time.Time) (*walletsclient.Hold, error) // Returns Hold if pending=true
+	CreditWallet(ctx context.Context, walletID string, amount sdkTypes.Monetary, sources []walletsclient.Subject, reference *string, metadata map[string]string, balance *string, timestamp *time.Time) error
+	DebitWallet(ctx context.Context, walletID string, amount sdkTypes.Monetary, pending *bool, metadata map[string]string, description *string, destination *walletsclient.Subject, balances []string, timestamp *time.Time) (*walletsclient.Hold, error) // Returns Hold if pending=true
 	GetBalance(ctx context.Context, walletID, balanceName string) (*walletsclient.BalanceWithAssets, error)
 	ListBalances(ctx context.Context, walletID string) (*walletsclient.ListBalancesResponseCursor, error)
 	GetHold(ctx context.Context, holdID string) (*walletsclient.ExpandedDebitHold, error)
